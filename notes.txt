@@ -1,0 +1,105 @@
+
+AI Agent
+
+	"LLM" calling "Tools" in a loop with "Context". Examples: Claude Code, Gemini CLI, Cursor, etc.
+
+Typical context of an AI agent
+
+	1. System instructions
+
+	2. Tool definitions
+
+	3. User Message
+
+Tool execution
+
+	Once the above context is passed to an LLM, it chooses a tool to execute. The result of the tool is added (appended) to the above context. Some example of tools are:
+
+	- Web browsing
+	- Fetching domain-specific context to help answer the query (RAG)
+	- Code execution
+
+Context Engineering
+
+	Process of carefully managing the context (which monotically increases if unmanaged) while ensuring the LLM responses are of high-quality for the task-at-hand. Some examples of things which needs to be added to context:
+
+	- Instructions / System prompt
+	- State / History (short-term memory)
+	- Long-term memory
+	- Retrieved information (RAG)
+	- User prompt
+	- Available tools
+
+	Some examples of why the context grows:
+
+	- Long history of edit-run-debug loops
+	- Huge tool outputs (example: big JSONs)
+	- Repeated error stacks
+
+	Result: Context rot; more tokens & less signal
+
+Specific requirements for coding agents
+
+	- Special environments for performing iterative actions
+	- Access to filesystems
+	- Long-running sessions
+	- Stronger security requirements
+
+What makes LLM ready for coding agents?
+
+	- Structured tool-use: supports function calling with JSON-like outputs
+
+	- Sufficient context (>= 30k tokens), because otherwise we will have poor performance
+
+	- Coding benchmarks: evaluated on tasks like SWE-bench (a bunch of real-life software engineering tasks)
+
+Context Management
+
+	1. Compact tool outputs
+
+		- Return a small, consistent JSON (don't paste raw payloads), i.e., response.json() is BAD, instead extract relevant fields and only add those to the context
+		
+		- Clip logs to last N lines; drop repeats
+
+	2. Don't dump everything
+
+		- If you are searching filesystem with some regex patterns, don't dump the entire result into LLM's context, instead return a small batch to the agent and explicitly annotate with paginated information. That way the LLM knows if it needs to request more information
+
+Securing code-executing agents
+
+	- By default treat all LLM code as untrusted
+	- Run code in a sandboxed runtime
+	- Enforce limits on CPU, memory, and time (so that no run-away process can takedown the entire system)
+	- Block network and filesystem access
+	- Steer the model to your tech-stack (this can be via one-shot prompting or using a fine-tuned model where the weights themselves are updated to your task, etc)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
