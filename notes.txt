@@ -21,7 +21,7 @@ Tool execution
 
 Context Engineering
 
-	Process of carefully managing the context (which monotically increases if unmanaged) while ensuring the LLM responses are of high-quality for the task-at-hand. Some examples of things which needs to be added to context:
+	Process of carefully managing the context (which monotonically increases if unmanaged) while ensuring the LLM responses are of high-quality for the task-at-hand. Some examples of things which needs to be added to context:
 
 	- Instructions / System prompt
 	- State / History (short-term memory)
@@ -73,3 +73,64 @@ Securing code-executing agents
 	- Block network and filesystem access
 	- Steer the model to your tech-stack (this can be via one-shot prompting or using a fine-tuned model where the weights themselves are updated to your task, etc)
 
+At the OS level, Linux gives you several primitives:
+
+	Namespaces
+		PID namespace      → cannot see host processes
+		mount namespace    → isolated filesystem view
+		network namespace  → separate network stack
+		user namespace     → fake/limited root
+		IPC namespace      → isolated shared memory
+
+	cgroups
+		CPU limit
+		RAM limit
+		process-count limit
+
+	seccomp
+		whitelist/blacklist syscalls
+
+	filesystem permissions
+		read-only mounts
+		ephemeral writable directories
+
+	Typical isolation done by hyperscalers when running our agents in cloud:
+
+		VM
+		└─ guest kernel
+			└─ container
+				└─ generated code
+
+		A VM is stronger because hostile code cannot directly attack the host kernel through ordinary syscalls.
+
+	Network isolation:
+
+		Container:
+		
+			docker run --network=none ...
+
+		VM:
+
+			Guest VM
+				↓
+			virtual NIC
+				↓
+			hypervisor / host firewall
+				↓
+			DROP everything
+
+		With network policies:
+
+			sandbox
+				↓
+			egress proxy
+				↓
+			allow:
+			api.github.com
+			pypi.org
+
+			deny:
+			169.254.169.254    # cloud metadata
+			private VPC ranges
+			arbitrary Internet
+		
